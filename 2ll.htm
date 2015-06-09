@@ -1,0 +1,209 @@
+﻿<!doctype html>
+<html>
+<meta charset="utf-8">
+<head>
+	<link rel="icon" type="image/png" href="data:image/png;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA////AAD/AAAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACIgIiAiIAAAIiAiICIgMAAiICIgIiAzAAAAAAAAADMwIiAiICIgAzAiICIgIiAwMCIgIiAiIDMAAAAAAAAAMzAiICIgIiADMCIgIiAiIDAwIiAiICIgMwAAAAAAAAAzMAERAREBEQMwABEQERAREDAAAREBEQERAABwAAAAMAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAMAAAADgAAAA" />
+	<title>2LL</title>
+	<style>
+		body{color:#777;font-family:arial;font-size:15px;font-weight:200;}img{border:0px;}
+		input,select{background-color:#ededed;color:#777;font-family:arial;font-size:15px;font-weight:700;padding:6px 24px;width:200px}
+		h1{font-size:120px;margin-bottom:50px}
+		.c{width:26px;height:26px;border:2px solid white;float:left}
+		.tbl{width:150px;height:150px;margin: 0 auto;display:none}
+	</style>
+<script src="input.js"></script>
+<script>
+/*
+	2LL - thom barlow
+	visualcube - conrad rider
+	magic algsets - tempus
+	
+	Parameters;
+	?ollcp - OLLCP mode
+	?spam - CLL subset organisation generator
+	
+	TODO
+	optimal solution array (add to dropdown)
+	full notation support
+	generic solver
+*/
+	function $(id) {return document.getElementById(id)}
+	
+	var w = new Worker("solve.js");
+	var state = 0;
+	var mode = 0;
+	if(-1!=location.search.indexOf("ollcp")) mode = 1;
+	else if(-1!=location.search.indexOf("spam")) mode = 2;
+	
+	w.onmessage = function(e) {
+		if (e.data=="done") {
+			state = 0;
+			$('solve').value = "Solve";
+			$('solve').disabled = false;
+		}
+		else if (e.data=="clear") {
+			$('output').innerHTML = "";
+		}
+		else {
+			$('output').innerHTML += e.data;
+		}
+	};
+	
+	function solve() {
+		if (state!=0) return 0;
+		if ($('toggle').value[0]!='V') input = vcase;
+		else input = $('input').value;
+		w.postMessage(JSON.stringify([input,$($('algset').value).innerHTML,mode])); // send algs
+		$('solve').value = "Solving...";
+		$('solve').disabled = true;
+		state++;
+	}	
+	
+	function subset(data) {
+		data = JSON.parse(data);
+		$('output').innerHTML = '';
+		var output = '<div style="text-align:center">';
+		for (var i=0;i<data.length;i++) {
+			output+='<div style="margin:30px;display:inline-block;border:0px dashed #777;">';
+			output+='<span style="font-weight:900;font-size:1.5em">'+data[i][0]+'<br></span>&nbsp;<br>';
+			for (var j=0;j<data[i][1].length;j++) {
+				output+='<div class="tbl">';
+				show(data[i][1][j]);
+				output+=$('tbl').innerHTML;
+				output+='</div>';
+				makevinput("tbl");
+			}
+			output+='</div>';
+		}
+		$('output').innerHTML = output+"</div>";
+	}
+	
+	window.onload = function() {
+		$('solve').value = "Solve";
+		$('solve').disabled = false;
+		state = 0;
+		makevinput("tbl");
+		//showcase([3,0,2,1,0,0,0,0,3,1,0,2,0,1,2,0]);
+		//subset('');
+	};
+	
+</script>
+</head>
+<body>
+	<div style="text-align:center">
+	<h1>2LL</h1>
+	<input type="text" id="input" style="width:600px">
+	<div id="tbl" class="tbl"></div>
+	<br>&nbsp;<br>
+	<select id="algset">
+		<option value="kiralgs">Kirjava (30)</option>
+		<option value="tempalgs">Tempus (18)</option>
+		<option value="kirinc">Kirjava (Extra)</option>
+	</select>
+	&emsp;
+	
+	<input type="button" value="Visual Input" id="toggle" onClick="toggle(this)">
+	&emsp;
+	<input type="button" value="Solve" id="solve" onClick="solve()">
+	<br>&nbsp;<br>
+	<div id="output" style="margin:0 auto;"></div>
+	</div>
+	<!-- data -->
+	<textarea style="display:none" id="kiralgs">R U R' U R U2 R'
+R U R' U R U' R' U R U2 R'
+R U R2 F R F2 U F
+F R' F' R U2 R U2 R'
+F R U R' U' R U R' U' F'
+L F R' F R F2 L'
+L F' L' U' L F L' F' U F
+R B' R F2 R' B R F2 R2
+R U R' U' R' F R F'
+R' U' R' F R F' U R
+F R U' R D R' U2 R D' R2 U' F'
+R U R' U F' L' U L F U' R U' R'
+L F R' F R F L' F R' F' L F L' R
+R2 D R' U2 R D' R' U2 R'
+R' F' R U R' U' R' F R2 U' R' U2 R
+F R2 D R' U R D' R2 U' F'
+R U' L' U R' U L U L' U L
+R' U' R U' R' U F' U F R
+R' U' R' F R F' R U' R' U2 R
+R U R' U' L R' F R F' L'
+R' L F R L' U2 R' L F R L'
+R U2 R' U2 R' F R2 U R' U' F'
+F R U' R' U' R U2 R' U' F'
+R' U' R U R' F' R U R' U' R' F R2
+L F L' R U R' U' L F' L'
+R U R' U R U' R' U' R' F R F'
+F U R U2 R' U' R U R' F'
+F R U R' U' R U' R' U R U R' F'
+F R U R2 U2 R2 U R2 U R F'
+F R' U' R2 F R' F' R2 U R U F'</textarea>
+	<textarea style="display:none" id="tempalgs">F' U' F R2 B' R' U B U R' B' U2 B
+F R U' R' F D B' R B D' F2
+B L' F' L2 B F' R' D2 R B2 F2
+F2 L2 F' R2 F L2 F' R2 F'
+L' R U B U' B' R' U' L
+F' L F U2 L' U' L U' L2 U2 L
+F R U R' F2 L' U' L F2 U' F2 U2 F
+B' U2 B R B2 R' U2 F R B2 R B' R2 F'
+B' U2 B2 L' B' L' B2 F' L' F L B2 L2
+B U2 R U' L' U R' U' L2 U' L' B'
+B' U2 B U B' R U B U' B' R' B
+B' U L' U B2 U B2 U' B2 L U2 B
+F' U2 F2 U F2 L D' L D L U L F
+B U2 F' L F L' B' L' B2 L' B2 L2
+F U' R U L U2 L' R' U2 B' U' F' U2 B
+B2 R F R B2 R B2 R B2 R2 B' F' R' B
+R U2 B F R2 B' R' B R' B' F' U2 R'
+R2 D' F' D' F2 D R U2 F U R2 D R'</textarea>
+	<textarea style="display:none" id="kirinc">R U R' U R U2 R'
+R U R' U R U' R' U R U2 R'
+R U R' U R U' R' U R U' R' U R U2 R'
+R U R' U' R' F R2 U' R' U' R U R' F'
+R U R2 F R F2 U F
+F U R U' R' F' R' F' U' F U R
+R' U2 R2 U R2 U R U' R U' R'
+F R' F' R U2 R U2 R'
+F R U R' U' F'
+F R U R' U' R U R' U' F'
+L' R' D2 R U2 R' D2 R U2 L
+R U' L' U R' U' L
+L F R' F R F2 L'
+L F' L' U' L F L' F' U F
+R U' R' U' F' U2 F U2 R U2 R'
+R B' R F2 R' B R F2 R2
+R2 L2 D' R L' F2 R' L D' R2 L2
+R2 L2 D R2 L2 U2 R2 L2 D R2 L2
+R U R' U' R' F R F'
+L F R' F' L' F R F'
+R' F R U R' U' F' U R
+R' U' R' F R F' U R
+R2 U' R F R' U R2 U' R' F' R
+F R U R' U' R U' R' U' R U R' F'
+F R U' R D R' U2 R D' R2 U' F'
+R U R' U F' L' U L F U' R U' R'
+L F R' F R F L' F R' F' L F L' R
+F' R D2 R' F U2 F' R D2 R' F U2
+R2 D R' U2 R D' R' U2 R'
+R' F' R U R' U' R' F R2 U' R' U2 R
+F R2 D R' U R D' R2 U' F'
+R U' L' U R' U L U L' U L
+R' U' R U' R' U F' U F R
+R' U' R' F R F' R U' R' U2 R
+R U R' U' L R' F R F' L'
+R' L F R L' U2 R' L F R L'
+R U2 R2 U' R2 U' R2 U2 R
+L' U R U' L U2 R' U R U2 R'
+R' F R2 B' R2 F' R2 B R'
+R U2 R' U2 R' F R2 U R' U' F'
+F R U' R' U2 R U R' F'
+R U' L' U R' U L U L' U2 R U' L U R'
+F R U' R' U' R U2 R' U' F'
+R' U' R U R' F' R U R' U' R' F R2
+L F L' R U R' U' L F' L'
+R U R' U R U' R' U' R' F R F'
+F U R U2 R' U' R U R' F'
+F R U R' U' R U' R' U R U R' F'</textarea>
+</body>
+</html>
